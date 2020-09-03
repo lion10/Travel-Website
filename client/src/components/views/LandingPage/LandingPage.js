@@ -7,16 +7,42 @@ const { Meta } = Card;
 
 function LandingPage() {
   const [Products, setProducts] = useState([]);
+  const [Skip, setSkip] = useState(0);
+  const [Limit, setLimit] = useState(8);
+  const [PostSize, setPostSize] = useState();
 
-  useEffect(() => {
-    Axios.post("/api/product/getProducts").then((response) => {
+  const getProduct = (variables) => {
+    Axios.post("/api/product/getProducts", variables).then((response) => {
       if (response.data.success) {
-        setProducts(response.data.products);
+        setProducts([...Products, ...response.data.products]);
+        setPostSize(response.data.PostSize);
       } else {
         alert("Failed to fetch products data");
       }
     });
+  };
+
+  useEffect(() => {
+    const variables = {
+      skip: Skip,
+      limit: Limit,
+    };
+
+    getProduct(variables);
   }, []);
+
+  const onLoadMore = () => {
+    let skip = Skip + Limit;
+
+    const variables = {
+      skip: skip,
+      limit: Limit,
+    };
+
+    getProduct(variables);
+
+    setSkip(skip);
+  };
 
   const renderCards = Products.map((product, index) => {
     return (
@@ -56,6 +82,14 @@ function LandingPage() {
       ) : (
         <div>
           <Row gutter={[16, 16]}>{renderCards}</Row>
+        </div>
+      )}
+      <br></br>
+      <br></br>
+
+      {PostSize >= Limit && (
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <button onClick={onLoadMore}>Load More</button>
         </div>
       )}
     </div>
